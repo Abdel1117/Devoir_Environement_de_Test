@@ -1,0 +1,56 @@
+name: Python Tests
+
+on:
+  push:
+    branches: ["dev"]
+  pull_request:
+    branches: ["dev"]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.9" # ou 3.10, 3.11, etc.
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install pytest
+
+      - name: Run tests
+        run: python -m pytest
+
+      - name: Email notification if success
+        if: ${{ success() }}
+        uses: dawidd6/action-send-mail@v3
+        with:
+          from: ${{ secrets.MAIL_FROM }}
+          to: "cedric.surquin@gmail.com"
+          subject: "Tests Pytest: Succès"
+          body: "Tous les tests se sont terminés avec succès."
+          server_address: ${{ secrets.MAIL_SERVER }}
+          server_port: ${{ secrets.MAIL_PORT }}
+          username: ${{ secrets.MAIL_USERNAME }}
+          password: ${{ secrets.MAIL_PASSWORD }}
+          secure: starttls # ou ssl selon votre configuration SMTP
+
+      - name: Email notification if failure
+        if: ${{ failure() }}
+        uses: dawidd6/action-send-mail@v3
+        with:
+          from: ${{ secrets.MAIL_FROM }}
+          to: "cedric.surquin@gmail.com"
+          subject: "Tests Pytest: Échec"
+          body: "Les tests ont échoué. Consultez les logs GitHub Actions pour plus de détails."
+          server_address: ${{ secrets.MAIL_SERVER }}
+          server_port: ${{ secrets.MAIL_PORT }}
+          username: ${{ secrets.MAIL_USERNAME }}
+          password: ${{ secrets.MAIL_PASSWORD }}
+          secure: starttls
